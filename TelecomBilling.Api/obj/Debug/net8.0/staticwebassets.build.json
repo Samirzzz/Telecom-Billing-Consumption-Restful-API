@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "W0UkG9BbOP4NYq0nsYAKdhPTjn6GjUe373JcNmkIsEs=",
+  "Source": "TelecomBilling.Api",
+  "BasePath": "_content/TelecomBilling.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
