@@ -52,4 +52,28 @@ namespace TelecomBilling.Api.DTOs
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
     }
+
+    public class RevenueStatisticsResponse
+    {
+        public string Month { get; set; } = string.Empty;
+        public decimal TotalRevenue { get; set; }
+        public decimal VoiceRevenue { get; set; }
+        public decimal DataRevenue { get; set; }
+        public decimal SMSRevenue { get; set; }
+        public decimal RoamingRevenue { get; set; }
+        public decimal VATAmount { get; set; }
+        public decimal LoyaltyDiscountAmount { get; set; }
+        public int TotalBillsGenerated { get; set; }
+        public int ActiveSubscribers { get; set; }
+        public decimal AverageRevenuePerSubscriber { get; set; }
+        public List<RevenueByPlanType> RevenueByPlanType { get; set; } = new List<RevenueByPlanType>();
+    }
+
+    public class RevenueByPlanType
+    {
+        public string PlanType { get; set; } = string.Empty;
+        public int SubscriberCount { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public decimal AverageRevenuePerSubscriber { get; set; }
+    }
 }

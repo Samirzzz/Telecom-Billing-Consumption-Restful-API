@@ -60,4 +60,56 @@ namespace TelecomBilling.Api.DTOs
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
     }
+
+    public class BulkUsageRecordRequest
+    {
+        [Required]
+        public List<UsageRecordRequest> UsageRecords { get; set; } = new List<UsageRecordRequest>();
+    }
+
+    public class BulkUsageRecordResponse
+    {
+        public int TotalRecords { get; set; }
+        public int SuccessfullyCreated { get; set; }
+        public int FailedRecords { get; set; }
+        public List<string> Errors { get; set; } = new List<string>();
+        public List<UsageRecordResponse> CreatedRecords { get; set; } = new List<UsageRecordResponse>();
+    }
+
+    public class TopConsumersResponse
+    {
+        public string Month { get; set; } = string.Empty;
+        public string SortBy { get; set; } = string.Empty;
+        public List<TopConsumerItem> TopConsumers { get; set; } = new List<TopConsumerItem>();
+    }
+
+    public class TopConsumerItem
+    {
+        public int UserId { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string PlanType { get; set; } = string.Empty;
+        public int TotalCallMinutes { get; set; }
+        public int TotalDataMB { get; set; }
+        public int TotalSMSCount { get; set; }
+        public decimal TotalCost { get; set; }
+        public int Rank { get; set; }
+    }
+
+    public class UsageStatisticsResponse
+    {
+        public string Month { get; set; } = string.Empty;
+        public int TotalSubscribers { get; set; }
+        public int TotalCallMinutes { get; set; }
+        public int TotalDataMB { get; set; }
+        public int TotalSMSCount { get; set; }
+        public int PeakTimeMinutes { get; set; }
+        public int OffPeakTimeMinutes { get; set; }
+        public int RoamingMinutes { get; set; }
+        public int RoamingDataMB { get; set; }
+        public int RoamingSMSCount { get; set; }
+        public decimal AverageCallMinutesPerUser { get; set; }
+        public decimal AverageDataMBPerUser { get; set; }
+        public decimal AverageSMSCountPerUser { get; set; }
+    }
 }

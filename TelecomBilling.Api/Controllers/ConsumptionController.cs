@@ -22,7 +22,7 @@ namespace TelecomBilling.Api.Controllers
         // Admin can create usage records
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<UsageRecordResponse>> CreateUsageRecord([FromBody] UsageRecordRequest request)
+        public async Task<ActionResult<object>> CreateUsageRecord([FromBody] UsageRecordRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -95,6 +95,26 @@ namespace TelecomBilling.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "An error occurred while deleting the usage record.", details = ex.Message });
+            }
+        }
+
+        // Admin can create bulk usage records
+        [HttpPost("bulk")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<object>> CreateBulkUsageRecords([FromBody] BulkUsageRecordRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
+        {
+            try
+            {
+                var result = await _consumptionService.CreateBulkUsageRecordsAsync(request);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while creating bulk usage records.", details = ex.Message });
             }
         }
     }

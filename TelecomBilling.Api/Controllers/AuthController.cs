@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TelecomBilling.Api.DTOs;
 using TelecomBilling.Api.Services;
+using TelecomBilling.Api.Models;
 
 namespace TelecomBilling.Api.Controllers
 {
@@ -17,7 +18,7 @@ namespace TelecomBilling.Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginRequest request)
+        public async Task<ActionResult<object>> Login([FromBody] LoginRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -35,7 +36,7 @@ namespace TelecomBilling.Api.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest request)
+        public async Task<ActionResult<object>> Register([FromBody] RegisterRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -57,7 +58,7 @@ namespace TelecomBilling.Api.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<ActionResult<AuthResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
+        public async Task<ActionResult<object>> RefreshToken([FromBody] RefreshTokenRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -76,7 +77,7 @@ namespace TelecomBilling.Api.Controllers
 
         [HttpPost("validate")]
         [Authorize]
-        public async Task<ActionResult<UserInfo>> ValidateToken()
+        public async Task<ActionResult<object>> ValidateToken([FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {

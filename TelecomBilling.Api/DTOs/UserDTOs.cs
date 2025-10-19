@@ -77,4 +77,45 @@ namespace TelecomBilling.Api.DTOs
         public int PageNumber { get; set; }
         public int PageSize { get; set; }
     }
+
+    public class UpdatePlanRequest
+    {
+        [Required]
+        public string PlanType { get; set; } = string.Empty;
+    }
+
+    public class UpdateSubscriberRequest
+    {
+        public string? Name { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? PlanType { get; set; }
+        public string? Country { get; set; }
+        public bool? IsRoaming { get; set; }
+        public bool? IsActive { get; set; }
+    }
+
+    public class SubscriberResponse
+    {
+        public int Id { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public string PlanType { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+        public bool IsRoaming { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? LastUpdated { get; set; }
+        public int YearsActive { get; set; }
+        public bool IsLoyaltyEligible { get; set; }
+    }
+
+    public class SubscriberListResponse
+    {
+        public List<SubscriberResponse> Subscribers { get; set; } = new List<SubscriberResponse>();
+        public int TotalCount { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+    }
 }

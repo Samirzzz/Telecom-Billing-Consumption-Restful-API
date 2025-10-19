@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TelecomBilling.Api.DTOs;
 using TelecomBilling.Api.Services;
+using TelecomBilling.Api.Models;
 
 namespace TelecomBilling.Api.Controllers
 {
@@ -24,9 +25,10 @@ namespace TelecomBilling.Api.Controllers
         /// <param name="pageSize">Page size for pagination</param>
         /// <returns>List of tariff rules</returns>
         [HttpGet]
-        public async Task<ActionResult<TariffRuleListResponse>> GetTariffRules(
+        public async Task<ActionResult<object>> GetTariffRules(
             [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -45,7 +47,7 @@ namespace TelecomBilling.Api.Controllers
         /// <param name="id">Tariff rule ID</param>
         /// <returns>Tariff rule details</returns>
         [HttpGet("{id}")]
-        public async Task<ActionResult<TariffRuleResponse>> GetTariffRule(int id)
+        public async Task<ActionResult<object>> GetTariffRule(int id, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -70,7 +72,7 @@ namespace TelecomBilling.Api.Controllers
         /// <param name="planType">Plan type</param>
         /// <returns>Active tariff rule for the plan type</returns>
         [HttpGet("active/{planType}")]
-        public async Task<ActionResult<TariffRuleResponse>> GetActiveTariffRule(string planType)
+        public async Task<ActionResult<object>> GetActiveTariffRule(string planType, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -96,7 +98,7 @@ namespace TelecomBilling.Api.Controllers
         /// <returns>Created tariff rule</returns>
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<TariffRuleResponse>> CreateTariffRule([FromBody] TariffRuleRequest request)
+        public async Task<ActionResult<object>> CreateTariffRule([FromBody] TariffRuleRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -117,7 +119,7 @@ namespace TelecomBilling.Api.Controllers
         /// <returns>Updated tariff rule</returns>
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<TariffRuleResponse>> UpdateTariffRule(int id, [FromBody] TariffRuleRequest request)
+        public async Task<ActionResult<object>> UpdateTariffRule(int id, [FromBody] TariffRuleRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {

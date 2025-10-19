@@ -14,6 +14,7 @@ namespace TelecomBilling.Api.Data
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<UsageRecord> UsageRecords { get; set; }
         public DbSet<TariffRule> TariffRules { get; set; }
+        public DbSet<BundleLimit> BundleLimits { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -63,6 +64,11 @@ namespace TelecomBilling.Api.Data
                 
             modelBuilder.Entity<UsageRecord>()
                 .HasIndex(u => new { u.UserId, u.Timestamp });
+            
+            // BundleLimit configuration
+            modelBuilder.Entity<BundleLimit>()
+                .HasIndex(bl => bl.PlanType)
+                .IsUnique();
         }
     }
 }

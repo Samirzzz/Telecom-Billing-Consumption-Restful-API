@@ -1,6 +1,126 @@
-@TelecomBilling.Api_HostAddress = http://localhost:5035
+# Telecom Billing API - Authentication Only
+# Use this file in VS Code with the REST Client extension or in Visual Studio
 
-GET {{TelecomBilling.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@baseUrl = http://localhost:5000
 
-###
+### Variables
+@token = {{login.response.body.token}}
+
+### 1. Health Check
+GET {{baseUrl}}/
+
+### 2. Authentication - Login Samir
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "samir",
+  "password": "1234"
+}
+
+### 4. Authentication - Register New User
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "email": "newuser@example.com",
+  "password": "newpassword123",
+  "role": "User"
+}
+
+### 5. Authentication - Register New Admin
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "newadmin",
+  "email": "newadmin@example.com",
+  "password": "newadmin123",
+  "role": "Admin"
+}
+
+### 6. Authentication - Refresh Token
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{login.response.body.refreshToken}}"
+}
+
+### 7. Authentication - Validate Token
+POST {{baseUrl}}/api/auth/validate
+Authorization: Bearer {{token}}
+
+### 8. Error Test - Invalid Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "invalid",
+  "password": "wrong"
+}
+
+### 9. Error Test - Invalid Registration
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "email": "admin@telecom.com",
+  "password": "password123",
+  "role": "User"
+}
+
+### 10. Error Test - Invalid Role
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123",
+  "role": "InvalidRole"
+}
+
+### 11. SOAP Format Tests - Login with SOAP Response
+POST {{baseUrl}}/api/auth/login?responseFormat=SOAP
+Content-Type: application/json
+
+{
+  "username": "samir",
+  "password": "1234"
+}
+
+### 12. SOAP Format Tests - Get Billing with SOAP Response
+GET {{baseUrl}}/api/billing/1/2025-01?responseFormat=SOAP
+Authorization: Bearer {{token}}
+
+### 13. SOAP Format Tests - Get Invoices with SOAP Response
+GET {{baseUrl}}/api/invoices?userId=1&responseFormat=SOAP
+Authorization: Bearer {{token}}
+
+### 14. SOAP Format Tests - Get Tariff Rules with SOAP Response
+GET {{baseUrl}}/api/tariffrules?responseFormat=SOAP
+Authorization: Bearer {{token}}
+
+### 15. SOAP Format Tests - Get Subscriber with SOAP Response
+GET {{baseUrl}}/api/subscribers/1?responseFormat=SOAP
+Authorization: Bearer {{token}}
+
+### 16. SOAP Format Tests - Get Consumption with SOAP Response
+GET {{baseUrl}}/api/consumption?userId=1&responseFormat=SOAP
+Authorization: Bearer {{token}}
+
+### 17. SOAP Format Tests - Get Statistics with SOAP Response
+GET {{baseUrl}}/api/statistics/revenue?responseFormat=SOAP
+Authorization: Bearer {{token}}
+
+### 18. SOAP Format Tests - Get Usage Statistics with SOAP Response
+GET {{baseUrl}}/api/statistics/usage?responseFormat=SOAP
+Authorization: Bearer {{token}}
+
+### 19. SOAP Format Tests - Get Top Consumers with SOAP Response
+GET {{baseUrl}}/api/statistics/top-consumers?responseFormat=SOAP
+Authorization: Bearer {{token}}

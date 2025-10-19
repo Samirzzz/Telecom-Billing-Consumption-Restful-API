@@ -91,7 +91,7 @@ namespace TelecomBilling.Api.Services
             return await GenerateAuthResponseAsync(user);
         }
 
-        public async Task<bool> ValidateTokenAsync(string token)
+        public Task<bool> ValidateTokenAsync(string token)
         {
             try
             {
@@ -110,11 +110,11 @@ namespace TelecomBilling.Api.Services
                     ClockSkew = TimeSpan.Zero
                 }, out SecurityToken validatedToken);
 
-                return true;
+                return Task.FromResult(true);
             }
             catch
             {
-                return false;
+                return Task.FromResult(false);
             }
         }
 
@@ -247,6 +247,106 @@ namespace TelecomBilling.Api.Services
         private bool VerifyPassword(string password, string hash)
         {
             return HashPassword(password) == hash;
+        }
+
+        public async Task<SubscriberResponse?> GetSubscriberAsync(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return null;
+
+            return MapToSubscriberResponse(user);
+        }
+
+        public async Task<SubscriberListResponse> GetSubscribersAsync(int pageNumber = 1, int pageSize = 10)
+        {
+            var query = _context.Users.AsQueryable();
+            var totalCount = await query.CountAsync();
+            
+            var users = await query
+                .OrderBy(u => u.Name)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new SubscriberListResponse
+            {
+                Subscribers = users.Select(MapToSubscriberResponse).ToList(),
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<SubscriberResponse?> UpdateSubscriberAsync(int id, UpdateSubscriberRequest request)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return null;
+
+            // Update only provided fields
+            if (!string.IsNullOrEmpty(request.Name))
+                user.Name = request.Name;
+            if (!string.IsNullOrEmpty(request.PhoneNumber))
+                user.PhoneNumber = request.PhoneNumber;
+            if (!string.IsNullOrEmpty(request.PlanType))
+                user.PlanType = request.PlanType;
+            if (!string.IsNullOrEmpty(request.Country))
+                user.Country = request.Country;
+            if (request.IsRoaming.HasValue)
+                user.IsRoaming = request.IsRoaming.Value;
+            if (request.IsActive.HasValue)
+                user.IsActive = request.IsActive.Value;
+
+            user.LastUpdated = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return MapToSubscriberResponse(user);
+        }
+
+        public async Task<SubscriberResponse?> UpdateSubscriberPlanAsync(int id, UpdatePlanRequest request)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return null;
+
+            user.PlanType = request.PlanType;
+            user.LastUpdated = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return MapToSubscriberResponse(user);
+        }
+
+        public async Task<bool> DeactivateSubscriberAsync(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return false;
+
+            user.IsActive = false;
+            user.LastUpdated = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        private static SubscriberResponse MapToSubscriberResponse(User user)
+        {
+            var yearsActive = (DateTime.UtcNow - user.CreatedAt).Days / 365;
+            var isLoyaltyEligible = yearsActive >= 2;
+
+            return new SubscriberResponse
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber,
+                PlanType = user.PlanType,
+                Country = user.Country,
+                IsRoaming = user.IsRoaming,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                LastUpdated = user.LastUpdated,
+                YearsActive = yearsActive,
+                IsLoyaltyEligible = isLoyaltyEligible
+            };
         }
     }
 }

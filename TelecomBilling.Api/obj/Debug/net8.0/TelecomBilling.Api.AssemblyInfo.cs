@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TelecomBilling.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b96c4b1067b11013d1ae4fc816c99f154e8503c1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0f91ce87c642141305b9538276680b93c3af810c")]
 [assembly: System.Reflection.AssemblyProductAttribute("TelecomBilling.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TelecomBilling.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -9,5 +9,8 @@ namespace TelecomBilling.Api.Services
         Task<bool> DeleteUsageRecordAsync(int id);
         Task<UsageRecordListResponse> GetUsageRecordsAsync(int userId, int pageNumber = 1, int pageSize = 10);
         Task<object> GetUsageRecordsWithFormatAsync(int userId, ResponseFormat format, int pageNumber = 1, int pageSize = 10);
+        Task<BulkUsageRecordResponse> CreateBulkUsageRecordsAsync(BulkUsageRecordRequest request);
+        Task<TopConsumersResponse> GetTopConsumersAsync(string? month, int limit, string sortBy);
+        Task<UsageStatisticsResponse> GetUsageStatisticsAsync(string? month);
     }
 }

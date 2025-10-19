@@ -155,6 +155,72 @@ namespace TelecomBilling.Api.Services
             };
         }
 
+        public async Task<RevenueStatisticsResponse> GetRevenueStatisticsAsync(string? month, int? year)
+        {
+            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : month;
+            
+            IQueryable<Invoice> query = _context.Invoices.Include(i => i.User);
+            
+            if (year.HasValue)
+            {
+                // Yearly statistics
+                var startDate = new DateTime(year.Value, 1, 1);
+                var endDate = new DateTime(year.Value, 12, 31);
+                query = query.Where(i => i.BillingDate >= startDate && i.BillingDate <= endDate);
+            }
+            else
+            {
+                // Monthly statistics
+                var startDate = DateTime.ParseExact($"{targetMonth}-01", "yyyy-MM-dd", null);
+                var endDate = startDate.AddMonths(1).AddDays(-1);
+                query = query.Where(i => i.BillingDate >= startDate && i.BillingDate <= endDate);
+            }
+
+            var revenueStats = await query
+                .GroupBy(i => 1)
+                .Select(g => new
+                {
+                    TotalRevenue = g.Sum(i => i.TotalAmount),
+                    VoiceRevenue = g.Sum(i => i.VoiceAmount),
+                    DataRevenue = g.Sum(i => i.DataAmount),
+                    SMSRevenue = g.Sum(i => i.SMSAmount),
+                    RoamingRevenue = g.Sum(i => i.RoamingAmount),
+                    TotalBillsGenerated = g.Count(),
+                    VATAmount = g.Sum(i => i.TotalAmount) * 0.15m, // Assuming 15% VAT
+                    LoyaltyDiscountAmount = g.Sum(i => i.TotalAmount) * 0.05m // Assuming 5% loyalty discount
+                })
+                .FirstOrDefaultAsync();
+
+            var activeSubscribers = await _context.Users.CountAsync(u => u.IsActive);
+
+            var revenueByPlanType = await query
+                .GroupBy(i => i.User!.PlanType)
+                .Select(g => new RevenueByPlanType
+                {
+                    PlanType = g.Key,
+                    SubscriberCount = g.Select(i => i.UserId).Distinct().Count(),
+                    TotalRevenue = g.Sum(i => i.TotalAmount),
+                    AverageRevenuePerSubscriber = g.Sum(i => i.TotalAmount) / g.Select(i => i.UserId).Distinct().Count()
+                })
+                .ToListAsync();
+
+            return new RevenueStatisticsResponse
+            {
+                Month = year.HasValue ? year.Value.ToString() : targetMonth,
+                TotalRevenue = revenueStats?.TotalRevenue ?? 0,
+                VoiceRevenue = revenueStats?.VoiceRevenue ?? 0,
+                DataRevenue = revenueStats?.DataRevenue ?? 0,
+                SMSRevenue = revenueStats?.SMSRevenue ?? 0,
+                RoamingRevenue = revenueStats?.RoamingRevenue ?? 0,
+                VATAmount = revenueStats?.VATAmount ?? 0,
+                LoyaltyDiscountAmount = revenueStats?.LoyaltyDiscountAmount ?? 0,
+                TotalBillsGenerated = revenueStats?.TotalBillsGenerated ?? 0,
+                ActiveSubscribers = activeSubscribers,
+                AverageRevenuePerSubscriber = activeSubscribers > 0 ? (revenueStats?.TotalRevenue ?? 0) / activeSubscribers : 0,
+                RevenueByPlanType = revenueByPlanType
+            };
+        }
+
         private static InvoiceResponse MapToInvoiceResponse(Invoice invoice)
         {
             return new InvoiceResponse

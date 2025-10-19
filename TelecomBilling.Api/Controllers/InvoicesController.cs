@@ -22,7 +22,7 @@ namespace TelecomBilling.Api.Controllers
         // Admin can create invoices, Users cannot directly create invoices
         [HttpPost("create")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<InvoiceResponse>> CreateInvoice([FromBody] InvoiceRequest request)
+        public async Task<ActionResult<object>> CreateInvoice([FromBody] InvoiceRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {
@@ -111,7 +111,7 @@ namespace TelecomBilling.Api.Controllers
         // Admin can update invoices
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<InvoiceResponse>> UpdateInvoice(int id, [FromBody] InvoiceRequest request)
+        public async Task<ActionResult<object>> UpdateInvoice(int id, [FromBody] InvoiceRequest request, [FromQuery] ResponseFormat responseFormat = ResponseFormat.Json)
         {
             try
             {

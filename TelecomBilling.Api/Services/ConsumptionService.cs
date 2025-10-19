@@ -89,6 +89,122 @@ namespace TelecomBilling.Api.Services
             };
         }
 
+        public async Task<BulkUsageRecordResponse> CreateBulkUsageRecordsAsync(BulkUsageRecordRequest request)
+        {
+            var response = new BulkUsageRecordResponse
+            {
+                TotalRecords = request.UsageRecords.Count
+            };
+
+            var createdRecords = new List<UsageRecordResponse>();
+
+            foreach (var usageRequest in request.UsageRecords)
+            {
+                try
+                {
+                    var usageRecord = await CreateUsageRecordAsync(usageRequest);
+                    createdRecords.Add(usageRecord);
+                    response.SuccessfullyCreated++;
+                }
+                catch (Exception ex)
+                {
+                    response.FailedRecords++;
+                    response.Errors.Add($"Failed to create usage record for user {usageRequest.UserId}: {ex.Message}");
+                }
+            }
+
+            response.CreatedRecords = createdRecords;
+            return response;
+        }
+
+        public async Task<TopConsumersResponse> GetTopConsumersAsync(string? month, int limit, string sortBy)
+        {
+            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : month;
+            
+            var startDate = DateTime.ParseExact($"{targetMonth}-01", "yyyy-MM-dd", null);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            var query = _context.UsageRecords
+                .Include(ur => ur.User)
+                .Where(ur => ur.Timestamp >= startDate && ur.Timestamp <= endDate)
+                .GroupBy(ur => new { ur.UserId, ur.User!.Name, ur.User.PhoneNumber, ur.User.PlanType })
+                .Select(g => new TopConsumerItem
+                {
+                    UserId = g.Key.UserId,
+                    UserName = g.Key.Name,
+                    PhoneNumber = g.Key.PhoneNumber,
+                    PlanType = g.Key.PlanType,
+                    TotalCallMinutes = g.Sum(ur => ur.CallMinutes),
+                    TotalDataMB = g.Sum(ur => ur.DataMB),
+                    TotalSMSCount = g.Sum(ur => ur.SMSCount),
+                    TotalCost = 0 // This would need to be calculated based on tariff rules
+                });
+
+            var topConsumers = sortBy.ToLower() switch
+            {
+                "voice" => await query.OrderByDescending(x => x.TotalCallMinutes).Take(limit).ToListAsync(),
+                "data" => await query.OrderByDescending(x => x.TotalDataMB).Take(limit).ToListAsync(),
+                "sms" => await query.OrderByDescending(x => x.TotalSMSCount).Take(limit).ToListAsync(),
+                _ => await query.OrderByDescending(x => x.TotalCallMinutes + x.TotalDataMB + x.TotalSMSCount).Take(limit).ToListAsync()
+            };
+
+            // Add rank
+            for (int i = 0; i < topConsumers.Count; i++)
+            {
+                topConsumers[i].Rank = i + 1;
+            }
+
+            return new TopConsumersResponse
+            {
+                Month = targetMonth,
+                SortBy = sortBy,
+                TopConsumers = topConsumers
+            };
+        }
+
+        public async Task<UsageStatisticsResponse> GetUsageStatisticsAsync(string? month)
+        {
+            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : month;
+            
+            var startDate = DateTime.ParseExact($"{targetMonth}-01", "yyyy-MM-dd", null);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            var usageStats = await _context.UsageRecords
+                .Where(ur => ur.Timestamp >= startDate && ur.Timestamp <= endDate)
+                .GroupBy(ur => 1)
+                .Select(g => new
+                {
+                    TotalCallMinutes = g.Sum(ur => ur.CallMinutes),
+                    TotalDataMB = g.Sum(ur => ur.DataMB),
+                    TotalSMSCount = g.Sum(ur => ur.SMSCount),
+                    PeakTimeMinutes = g.Where(ur => ur.IsPeakTime).Sum(ur => ur.CallMinutes),
+                    OffPeakTimeMinutes = g.Where(ur => !ur.IsPeakTime).Sum(ur => ur.CallMinutes),
+                    RoamingMinutes = g.Where(ur => ur.IsRoaming).Sum(ur => ur.CallMinutes),
+                    RoamingDataMB = g.Where(ur => ur.IsRoaming).Sum(ur => ur.DataMB),
+                    RoamingSMSCount = g.Where(ur => ur.IsRoaming).Sum(ur => ur.SMSCount)
+                })
+                .FirstOrDefaultAsync();
+
+            var totalSubscribers = await _context.Users.CountAsync(u => u.IsActive);
+
+            return new UsageStatisticsResponse
+            {
+                Month = targetMonth,
+                TotalSubscribers = totalSubscribers,
+                TotalCallMinutes = usageStats?.TotalCallMinutes ?? 0,
+                TotalDataMB = usageStats?.TotalDataMB ?? 0,
+                TotalSMSCount = usageStats?.TotalSMSCount ?? 0,
+                PeakTimeMinutes = usageStats?.PeakTimeMinutes ?? 0,
+                OffPeakTimeMinutes = usageStats?.OffPeakTimeMinutes ?? 0,
+                RoamingMinutes = usageStats?.RoamingMinutes ?? 0,
+                RoamingDataMB = usageStats?.RoamingDataMB ?? 0,
+                RoamingSMSCount = usageStats?.RoamingSMSCount ?? 0,
+                AverageCallMinutesPerUser = totalSubscribers > 0 ? (usageStats?.TotalCallMinutes ?? 0) / (decimal)totalSubscribers : 0,
+                AverageDataMBPerUser = totalSubscribers > 0 ? (usageStats?.TotalDataMB ?? 0) / (decimal)totalSubscribers : 0,
+                AverageSMSCountPerUser = totalSubscribers > 0 ? (usageStats?.TotalSMSCount ?? 0) / (decimal)totalSubscribers : 0
+            };
+        }
+
         private static UsageRecordResponse MapToUsageRecordResponse(UsageRecord usageRecord)
         {
             return new UsageRecordResponse

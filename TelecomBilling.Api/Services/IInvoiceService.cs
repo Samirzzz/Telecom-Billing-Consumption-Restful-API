@@ -12,5 +12,6 @@ namespace TelecomBilling.Api.Services
         Task<bool> DeleteInvoiceAsync(int id);
         Task<object> GetInvoiceWithFormatAsync(int userId, string month, ResponseFormat format);
         Task<object> GetInvoicesWithFormatAsync(int? userId, ResponseFormat format, int pageNumber = 1, int pageSize = 10);
+        Task<RevenueStatisticsResponse> GetRevenueStatisticsAsync(string? month, int? year);
     }
 }

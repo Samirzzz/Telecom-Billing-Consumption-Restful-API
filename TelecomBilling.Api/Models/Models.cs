@@ -183,6 +183,36 @@ namespace TelecomBilling.Api.Models
         public DateTime? LastUpdated { get; set; }
     }
 
+    public class BundleLimit
+    {
+        public int Id { get; set; }
+        
+        [Required]
+        [StringLength(50)]
+        public string PlanType { get; set; } = string.Empty;
+        
+        [Required]
+        public int VoiceMinutesLimit { get; set; } // Monthly voice minutes limit
+        
+        [Required]
+        public int DataMBLimit { get; set; } // Monthly data MB limit
+        
+        [Required]
+        public int SMSLimit { get; set; } // Monthly SMS limit
+        
+        [Required]
+        public int PeakTimeMinutesLimit { get; set; } // Monthly peak time minutes limit
+        
+        [Required]
+        public int OffPeakTimeMinutesLimit { get; set; } // Monthly off-peak time minutes limit
+        
+        public bool IsActive { get; set; } = true;
+        
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        
+        public DateTime? LastUpdated { get; set; }
+    }
+
     public enum ResponseFormat
     {
         Json,
