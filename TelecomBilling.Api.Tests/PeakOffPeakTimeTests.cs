@@ -40,13 +40,13 @@ namespace TelecomBilling.Api.Tests
         }
 
         [Fact]
-        public void IsPeakTime_WeekdayEvening_ShouldReturnFalse()
+        public void IsPeakTime_WeekdayEvening_ShouldReturnTrue()
         {
             var timestamp = new DateTime(2024, 1, 15, 19, 0, 0);
 
             var result = _bundleLimitService.IsPeakTime(timestamp);
 
-            Assert.False(result);
+            Assert.True(result);
         }
 
         [Fact]
@@ -84,8 +84,10 @@ namespace TelecomBilling.Api.Tests
         [InlineData(9, 30, true)]
         [InlineData(12, 0, true)]
         [InlineData(17, 59, true)]
-        [InlineData(18, 0, false)]
-        [InlineData(19, 0, false)]
+        [InlineData(18, 0, true)]
+        [InlineData(19, 0, true)]
+        [InlineData(19, 59, true)]
+        [InlineData(20, 0, false)]
         [InlineData(7, 59, false)]
         public void IsPeakTime_VariousHours_ShouldReturnExpectedResult(int hour, int minute, bool expected)
         {
@@ -130,7 +132,7 @@ namespace TelecomBilling.Api.Tests
         [Fact]
         public void IsPeakTime_EdgeCase_ExactPeakEnd_ShouldReturnFalse()
         {
-            var timestamp = new DateTime(2024, 1, 15, 18, 0, 0);
+            var timestamp = new DateTime(2024, 1, 15, 20, 0, 0);
 
             var result = _bundleLimitService.IsPeakTime(timestamp);
 
