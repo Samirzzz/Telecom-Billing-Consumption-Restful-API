@@ -41,8 +41,6 @@ namespace TelecomBilling.Api.Formatters
                    context.ObjectType == typeof(BulkUsageRecordResponse) ||
                    context.ObjectType == typeof(SubscriberResponse) ||
                    context.ObjectType == typeof(SubscriberListResponse) ||
-                   context.ObjectType == typeof(TariffRuleResponse) ||
-                   context.ObjectType == typeof(TariffRuleListResponse) ||
                    context.ObjectType == typeof(TopConsumersResponse) ||
                    context.ObjectType == typeof(UsageStatisticsResponse) ||
                    context.ObjectType == typeof(RevenueStatisticsResponse) ||
@@ -90,12 +88,6 @@ namespace TelecomBilling.Api.Formatters
                     break;
                 case SubscriberListResponse subscriberList:
                     buffer.Append(GenerateSubscriberListSoapXml(subscriberList));
-                    break;
-                case TariffRuleResponse tariffRule:
-                    buffer.Append(GenerateTariffRuleSoapXml(tariffRule));
-                    break;
-                case TariffRuleListResponse tariffRuleList:
-                    buffer.Append(GenerateTariffRuleListSoapXml(tariffRuleList));
                     break;
                 case TopConsumersResponse topConsumers:
                     buffer.Append(GenerateTopConsumersSoapXml(topConsumers));
@@ -602,74 +594,6 @@ namespace TelecomBilling.Api.Formatters
             
             soap.AppendLine("      </tns:Subscribers>");
             soap.AppendLine("    </tns:SubscriberListResponse>");
-            soap.AppendLine("  </soap:Body>");
-            soap.AppendLine("</soap:Envelope>");
-
-            return soap.ToString();
-        }
-
-        private string GenerateTariffRuleSoapXml(TariffRuleResponse tariffRule)
-        {
-            var soap = new StringBuilder();
-            soap.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            soap.AppendLine("<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tns=\"http://tempuri.org/\">");
-            soap.AppendLine("  <soap:Body>");
-            soap.AppendLine("    <tns:TariffRuleResponse>");
-            soap.AppendLine("      <tns:TariffRule>");
-            soap.AppendLine($"        <tns:Id>{tariffRule.Id}</tns:Id>");
-            soap.AppendLine($"        <tns:Name>{XmlEscape(tariffRule.Name)}</tns:Name>");
-            soap.AppendLine($"        <tns:PlanType>{XmlEscape(tariffRule.PlanType)}</tns:PlanType>");
-            soap.AppendLine($"        <tns:VoicePeakRate>{tariffRule.VoicePeakRate:F4}</tns:VoicePeakRate>");
-            soap.AppendLine($"        <tns:VoiceOffPeakRate>{tariffRule.VoiceOffPeakRate:F4}</tns:VoiceOffPeakRate>");
-            soap.AppendLine($"        <tns:DataRate>{tariffRule.DataRate:F4}</tns:DataRate>");
-            soap.AppendLine($"        <tns:SMSRate>{tariffRule.SMSRate:F4}</tns:SMSRate>");
-            soap.AppendLine($"        <tns:RoamingVoiceRate>{tariffRule.RoamingVoiceRate:F4}</tns:RoamingVoiceRate>");
-            soap.AppendLine($"        <tns:RoamingDataRate>{tariffRule.RoamingDataRate:F4}</tns:RoamingDataRate>");
-            soap.AppendLine($"        <tns:RoamingSMSRate>{tariffRule.RoamingSMSRate:F4}</tns:RoamingSMSRate>");
-            soap.AppendLine($"        <tns:IsActive>{tariffRule.IsActive.ToString().ToLower()}</tns:IsActive>");
-            soap.AppendLine($"        <tns:CreatedAt>{tariffRule.CreatedAt:yyyy-MM-ddTHH:mm:ssZ}</tns:CreatedAt>");
-            soap.AppendLine($"        <tns:LastUpdated>{tariffRule.LastUpdated:yyyy-MM-ddTHH:mm:ssZ}</tns:LastUpdated>");
-            soap.AppendLine("      </tns:TariffRule>");
-            soap.AppendLine("    </tns:TariffRuleResponse>");
-            soap.AppendLine("  </soap:Body>");
-            soap.AppendLine("</soap:Envelope>");
-
-            return soap.ToString();
-        }
-
-        private string GenerateTariffRuleListSoapXml(TariffRuleListResponse tariffRuleList)
-        {
-            var soap = new StringBuilder();
-            soap.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            soap.AppendLine("<soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:tns=\"http://tempuri.org/\">");
-            soap.AppendLine("  <soap:Body>");
-            soap.AppendLine("    <tns:TariffRuleListResponse>");
-            soap.AppendLine($"      <tns:TotalCount>{tariffRuleList.TotalCount}</tns:TotalCount>");
-            soap.AppendLine($"      <tns:PageNumber>{tariffRuleList.PageNumber}</tns:PageNumber>");
-            soap.AppendLine($"      <tns:PageSize>{tariffRuleList.PageSize}</tns:PageSize>");
-            soap.AppendLine("      <tns:TariffRules>");
-            
-            foreach (var tariffRule in tariffRuleList.TariffRules)
-            {
-                soap.AppendLine("        <tns:TariffRule>");
-                soap.AppendLine($"          <tns:Id>{tariffRule.Id}</tns:Id>");
-                soap.AppendLine($"          <tns:Name>{XmlEscape(tariffRule.Name)}</tns:Name>");
-                soap.AppendLine($"          <tns:PlanType>{XmlEscape(tariffRule.PlanType)}</tns:PlanType>");
-                soap.AppendLine($"          <tns:VoicePeakRate>{tariffRule.VoicePeakRate:F4}</tns:VoicePeakRate>");
-                soap.AppendLine($"          <tns:VoiceOffPeakRate>{tariffRule.VoiceOffPeakRate:F4}</tns:VoiceOffPeakRate>");
-                soap.AppendLine($"          <tns:DataRate>{tariffRule.DataRate:F4}</tns:DataRate>");
-                soap.AppendLine($"          <tns:SMSRate>{tariffRule.SMSRate:F4}</tns:SMSRate>");
-                soap.AppendLine($"          <tns:RoamingVoiceRate>{tariffRule.RoamingVoiceRate:F4}</tns:RoamingVoiceRate>");
-                soap.AppendLine($"          <tns:RoamingDataRate>{tariffRule.RoamingDataRate:F4}</tns:RoamingDataRate>");
-                soap.AppendLine($"          <tns:RoamingSMSRate>{tariffRule.RoamingSMSRate:F4}</tns:RoamingSMSRate>");
-                soap.AppendLine($"          <tns:IsActive>{tariffRule.IsActive.ToString().ToLower()}</tns:IsActive>");
-                soap.AppendLine($"          <tns:CreatedAt>{tariffRule.CreatedAt:yyyy-MM-ddTHH:mm:ssZ}</tns:CreatedAt>");
-                soap.AppendLine($"          <tns:LastUpdated>{tariffRule.LastUpdated:yyyy-MM-ddTHH:mm:ssZ}</tns:LastUpdated>");
-                soap.AppendLine("        </tns:TariffRule>");
-            }
-            
-            soap.AppendLine("      </tns:TariffRules>");
-            soap.AppendLine("    </tns:TariffRuleListResponse>");
             soap.AppendLine("  </soap:Body>");
             soap.AppendLine("</soap:Envelope>");
 

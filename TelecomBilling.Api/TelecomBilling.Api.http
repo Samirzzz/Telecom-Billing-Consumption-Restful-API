@@ -101,11 +101,7 @@ Authorization: Bearer {{token}}
 GET {{baseUrl}}/api/invoices?userId=1&responseFormat=SOAP
 Authorization: Bearer {{token}}
 
-### 14. SOAP Format Tests - Get Tariff Rules with SOAP Response
-GET {{baseUrl}}/api/tariffrules?responseFormat=SOAP
-Authorization: Bearer {{token}}
-
-### 15. SOAP Format Tests - Get Subscriber with SOAP Response
+### 14. SOAP Format Tests - Get Subscriber with SOAP Response
 GET {{baseUrl}}/api/subscribers/1?responseFormat=SOAP
 Authorization: Bearer {{token}}
 

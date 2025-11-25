@@ -70,23 +70,6 @@ namespace TelecomBilling.Api.Tests
             };
         }
 
-        public static TariffRule CreateTestTariffRule(string planType = "Basic")
-        {
-            return new TariffRule
-            {
-                Name = $"{planType} Plan Tariff",
-                PlanType = planType,
-                VoicePeakRate = 0.10m,
-                VoiceOffPeakRate = 0.05m,
-                DataRate = 0.02m,
-                SMSRate = 0.15m,
-                RoamingVoiceRate = 0.25m,
-                RoamingDataRate = 0.08m,
-                RoamingSMSRate = 0.30m,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-        }
     }
 }
 

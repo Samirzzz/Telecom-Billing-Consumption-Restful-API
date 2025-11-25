@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using TelecomBilling.Api.Data;
 using TelecomBilling.Api.DTOs;
 using TelecomBilling.Api.Models;
+using TelecomBilling.Api.Utils;
 
 namespace TelecomBilling.Api.Services
 {
     public class InvoiceService : IInvoiceService
     {
         private readonly TelecomBillingDbContext _context;
+        private readonly ICostCalculationService _costCalculationService;
 
-        public InvoiceService(TelecomBillingDbContext context)
+        public InvoiceService(TelecomBillingDbContext context, ICostCalculationService costCalculationService)
         {
             _context = context;
+            _costCalculationService = costCalculationService;
         }
 
         public async Task<InvoiceResponse?> GetInvoiceAsync(int userId, string month)
@@ -56,36 +59,62 @@ namespace TelecomBilling.Api.Services
                 throw new ArgumentException("User not found");
             }
 
-            // Check if invoice already exists for this month
+            if (string.IsNullOrWhiteSpace(request.Month))
+            {
+                throw new ArgumentException("Month is required and must be in format YYYY-MM (e.g., 2024-10)");
+            }
+
+            var normalizedMonth = MonthFormatHelper.NormalizeMonthFormat(request.Month);
+            if (string.IsNullOrEmpty(normalizedMonth))
+            {
+                throw new ArgumentException($"Invalid month format: '{request.Month}'. Expected format: YYYY-MM (e.g., 2024-10)");
+            }
+
             var existingInvoice = await _context.Invoices
-                .FirstOrDefaultAsync(i => i.UserId == request.UserId && i.Month == request.Month);
+                .FirstOrDefaultAsync(i => i.UserId == request.UserId && i.Month == normalizedMonth);
 
             if (existingInvoice != null)
             {
                 throw new InvalidOperationException("Invoice already exists for this user and month");
             }
 
-            // Generate sample invoice data (in a real application, this would be calculated)
+            var startDate = MonthFormatHelper.ParseMonthToStartDate(request.Month);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            var usageRecords = await _context.UsageRecords
+                .Where(ur => ur.UserId == request.UserId && ur.Timestamp >= startDate && ur.Timestamp <= endDate)
+                .OrderBy(ur => ur.Timestamp)
+                .ToListAsync();
+
+            if (!usageRecords.Any())
+            {
+                throw new InvalidOperationException("No usage records found for this month");
+            }
+
             var invoice = new Invoice
             {
                 UserId = request.UserId,
-                Month = request.Month,
+                Month = normalizedMonth,
                 BillingDate = DateTime.UtcNow,
-                VoiceMinutes = Random.Shared.Next(100, 1000),
-                DataMB = Random.Shared.Next(500, 5000),
-                SMSMessages = Random.Shared.Next(50, 500),
-                RoamingMinutes = user.IsRoaming ? Random.Shared.Next(0, 200) : 0,
-                RoamingDataMB = user.IsRoaming ? Random.Shared.Next(0, 1000) : 0,
-                RoamingSMSMessages = user.IsRoaming ? Random.Shared.Next(0, 50) : 0,
+                VoiceMinutes = usageRecords.Sum(ur => ur.CallMinutes),
+                DataMB = usageRecords.Sum(ur => ur.DataMB),
+                SMSMessages = usageRecords.Sum(ur => ur.SMSCount),
+                RoamingMinutes = usageRecords.Where(ur => ur.IsRoaming).Sum(ur => ur.CallMinutes),
+                RoamingDataMB = usageRecords.Where(ur => ur.IsRoaming).Sum(ur => ur.DataMB),
+                RoamingSMSMessages = usageRecords.Where(ur => ur.IsRoaming).Sum(ur => ur.SMSCount),
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Calculate amounts based on plan type (sample rates)
-            invoice.VoiceAmount = invoice.VoiceMinutes * 0.05m; // $0.05 per minute
-            invoice.DataAmount = invoice.DataMB * 0.01m; // $0.01 per MB
-            invoice.SMSAmount = invoice.SMSMessages * 0.10m; // $0.10 per SMS
-            invoice.RoamingAmount = (invoice.RoamingMinutes * 0.15m) + (invoice.RoamingDataMB * 0.05m) + (invoice.RoamingSMSMessages * 0.25m);
-            invoice.TotalAmount = invoice.VoiceAmount + invoice.DataAmount + invoice.SMSAmount + invoice.RoamingAmount;
+            invoice.VoiceAmount = usageRecords.Sum(ur => ur.CallCost);
+            invoice.DataAmount = usageRecords.Sum(ur => ur.DataCost);
+            invoice.SMSAmount = usageRecords.Sum(ur => ur.SMSCost);
+            
+            var roamingRecords = usageRecords.Where(ur => ur.IsRoaming).ToList();
+            invoice.RoamingAmount = roamingRecords.Sum(ur => ur.DataCost) + 
+                                   roamingRecords.Sum(ur => ur.SMSCost) + 
+                                   roamingRecords.Sum(ur => ur.CallCost);
+            
+            invoice.TotalAmount = usageRecords.Sum(ur => ur.TotalCost);
 
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync();
@@ -93,6 +122,7 @@ namespace TelecomBilling.Api.Services
             return await GetInvoiceAsync(invoice.UserId, invoice.Month) ?? 
                    throw new InvalidOperationException("Failed to retrieve created invoice");
         }
+
 
         public async Task<InvoiceResponse?> UpdateInvoiceAsync(int id, InvoiceRequest request)
         {
@@ -102,8 +132,14 @@ namespace TelecomBilling.Api.Services
                 return null;
             }
 
+            var normalizedMonth = MonthFormatHelper.NormalizeMonthFormat(request.Month);
+            if (string.IsNullOrEmpty(normalizedMonth))
+            {
+                throw new ArgumentException($"Invalid month format: '{request.Month}'. Expected format: YYYY-MM (e.g., 2024-10)");
+            }
+
             invoice.UserId = request.UserId;
-            invoice.Month = request.Month;
+            invoice.Month = normalizedMonth;
             invoice.LastUpdated = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -126,7 +162,8 @@ namespace TelecomBilling.Api.Services
 
         public async Task<object> GetInvoiceWithFormatAsync(int userId, string month, ResponseFormat format)
         {
-            var invoice = await GetInvoiceAsync(userId, month);
+            var normalizedMonth = MonthFormatHelper.NormalizeMonthFormat(month) ?? month;
+            var invoice = await GetInvoiceAsync(userId, normalizedMonth);
             
             if (invoice == null)
             {
@@ -157,21 +194,19 @@ namespace TelecomBilling.Api.Services
 
         public async Task<RevenueStatisticsResponse> GetRevenueStatisticsAsync(string? month, int? year)
         {
-            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : month;
+            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : MonthFormatHelper.NormalizeMonthFormat(month) ?? month;
             
             IQueryable<Invoice> query = _context.Invoices.Include(i => i.User);
             
             if (year.HasValue)
             {
-                // Yearly statistics
                 var startDate = new DateTime(year.Value, 1, 1);
                 var endDate = new DateTime(year.Value, 12, 31);
                 query = query.Where(i => i.BillingDate >= startDate && i.BillingDate <= endDate);
             }
             else
             {
-                // Monthly statistics
-                var startDate = DateTime.ParseExact($"{targetMonth}-01", "yyyy-MM-dd", null);
+                var startDate = MonthFormatHelper.ParseMonthToStartDate(month ?? DateTime.UtcNow.ToString("yyyy-MM"));
                 var endDate = startDate.AddMonths(1).AddDays(-1);
                 query = query.Where(i => i.BillingDate >= startDate && i.BillingDate <= endDate);
             }

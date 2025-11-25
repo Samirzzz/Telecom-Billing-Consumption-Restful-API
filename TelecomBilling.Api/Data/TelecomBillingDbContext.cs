@@ -13,7 +13,6 @@ namespace TelecomBilling.Api.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<UsageRecord> UsageRecords { get; set; }
-        public DbSet<TariffRule> TariffRules { get; set; }
         public DbSet<BundleLimit> BundleLimits { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)

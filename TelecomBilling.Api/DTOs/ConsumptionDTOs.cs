@@ -35,6 +35,13 @@ namespace TelecomBilling.Api.DTOs
         public bool IsPeakTime { get; set; }
         public bool IsRoaming { get; set; }
         public DateTime CreatedAt { get; set; }
+        public decimal CallCost { get; set; }
+        public decimal DataCost { get; set; }
+        public decimal SMSCost { get; set; }
+        public decimal TotalCost { get; set; }
+        public bool IsBundleExceeded { get; set; }
+        public int BundleExceededMinutes { get; set; }
+        public int BundleExceededDataMB { get; set; }
         public UserInfo? User { get; set; }
     }
     

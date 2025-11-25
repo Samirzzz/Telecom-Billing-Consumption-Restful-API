@@ -10,6 +10,7 @@ namespace TelecomBilling.Api.Tests
     {
         private readonly ConsumptionService _consumptionService;
         private readonly BundleLimitService _bundleLimitService;
+        private readonly CostCalculationService _costCalculationService;
         private readonly TelecomBillingDbContext _context;
 
         public ConsumptionServiceIntegrationTests()
@@ -19,7 +20,8 @@ namespace TelecomBilling.Api.Tests
                 .Options;
 
             _context = new TelecomBillingDbContext(options);
-            _consumptionService = new ConsumptionService(_context);
+            _costCalculationService = new CostCalculationService(_context);
+            _consumptionService = new ConsumptionService(_context, _costCalculationService);
             _bundleLimitService = new BundleLimitService(_context);
         }
 

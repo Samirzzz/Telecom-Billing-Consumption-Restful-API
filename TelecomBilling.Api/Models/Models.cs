@@ -96,7 +96,20 @@ namespace TelecomBilling.Api.Models
         
         public DateTime CreatedAt { get; set; }
         
-        // Navigation property
+        public decimal CallCost { get; set; }
+        
+        public decimal DataCost { get; set; }
+        
+        public decimal SMSCost { get; set; }
+        
+        public decimal TotalCost { get; set; }
+        
+        public bool IsBundleExceeded { get; set; }
+        
+        public int BundleExceededMinutes { get; set; }
+        
+        public int BundleExceededDataMB { get; set; }
+        
         public User? User { get; set; }
     }
 
@@ -141,46 +154,6 @@ namespace TelecomBilling.Api.Models
         
         // Navigation property
         public User? User { get; set; }
-    }
-
-    public class TariffRule
-    {
-        public int Id { get; set; }
-        
-        [Required]
-        [StringLength(100)]
-        public string Name { get; set; } = string.Empty;
-        
-        [Required]
-        [StringLength(50)]
-        public string PlanType { get; set; } = string.Empty;
-        
-        [Required]
-        public decimal VoicePeakRate { get; set; } // Rate per minute during peak hours
-        
-        [Required]
-        public decimal VoiceOffPeakRate { get; set; } // Rate per minute during off-peak hours
-        
-        [Required]
-        public decimal DataRate { get; set; } // Rate per MB
-        
-        [Required]
-        public decimal SMSRate { get; set; } // Rate per SMS
-        
-        [Required]
-        public decimal RoamingVoiceRate { get; set; } // Roaming voice rate per minute
-        
-        [Required]
-        public decimal RoamingDataRate { get; set; } // Roaming data rate per MB
-        
-        [Required]
-        public decimal RoamingSMSRate { get; set; } // Roaming SMS rate per message
-        
-        public bool IsActive { get; set; }
-        
-        public DateTime CreatedAt { get; set; }
-        
-        public DateTime? LastUpdated { get; set; }
     }
 
     public class BundleLimit

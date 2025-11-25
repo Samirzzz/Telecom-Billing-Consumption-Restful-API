@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TelecomBilling.Api.Data;
 using TelecomBilling.Api.DTOs;
 using TelecomBilling.Api.Models;
+using TelecomBilling.Api.Utils;
 
 namespace TelecomBilling.Api.Services
 {
@@ -125,7 +126,7 @@ namespace TelecomBilling.Api.Services
                 };
             }
 
-            var startDate = DateTime.ParseExact($"{month}-01", "yyyy-MM-dd", null);
+            var startDate = MonthFormatHelper.ParseMonthToStartDate(month);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var usage = await _context.UsageRecords
@@ -206,7 +207,8 @@ namespace TelecomBilling.Api.Services
                 };
             }
 
-            var startDate = DateTime.ParseExact($"{request.Month}-01", "yyyy-MM-dd", null);
+            var normalizedMonth = MonthFormatHelper.NormalizeMonthFormat(request.Month) ?? request.Month;
+            var startDate = MonthFormatHelper.ParseMonthToStartDate(normalizedMonth);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var usage = await _context.UsageRecords
@@ -306,7 +308,7 @@ namespace TelecomBilling.Api.Services
             {
                 UserId = request.UserId,
                 PlanType = user.PlanType,
-                Month = request.Month,
+                Month = normalizedMonth,
                 BundleLimit = bundleLimit,
                 CurrentUsage = currentUsage,
                 Violations = violations,
@@ -316,14 +318,13 @@ namespace TelecomBilling.Api.Services
 
         public bool IsPeakTime(DateTime timestamp)
         {
-            // Peak hours: 8 AM to 6 PM, Monday to Friday
             var hour = timestamp.Hour;
             var dayOfWeek = timestamp.DayOfWeek;
             
             return dayOfWeek >= DayOfWeek.Monday && 
                    dayOfWeek <= DayOfWeek.Friday && 
                    hour >= 8 && 
-                   hour < 18;
+                   hour < 20;
         }
 
         public async Task<bool> IsWithinBundleLimitsAsync(int userId, string month, int additionalVoiceMinutes = 0, int additionalDataMB = 0, int additionalSMS = 0)
@@ -334,7 +335,7 @@ namespace TelecomBilling.Api.Services
             var bundleLimit = await GetBundleLimitByPlanTypeAsync(user.PlanType);
             if (bundleLimit == null) return true; // No limits defined
 
-            var startDate = DateTime.ParseExact($"{month}-01", "yyyy-MM-dd", null);
+            var startDate = MonthFormatHelper.ParseMonthToStartDate(month);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var usage = await _context.UsageRecords

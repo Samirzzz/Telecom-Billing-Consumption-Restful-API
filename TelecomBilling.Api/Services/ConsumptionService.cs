@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using TelecomBilling.Api.Data;
 using TelecomBilling.Api.DTOs;
 using TelecomBilling.Api.Models;
+using TelecomBilling.Api.Utils;
 
 namespace TelecomBilling.Api.Services
 {
     public class ConsumptionService : IConsumptionService
     {
         private readonly TelecomBillingDbContext _context;
+        private readonly ICostCalculationService _costCalculationService;
 
-        public ConsumptionService(TelecomBillingDbContext context)
+        public ConsumptionService(TelecomBillingDbContext context, ICostCalculationService costCalculationService)
         {
             _context = context;
+            _costCalculationService = costCalculationService;
         }
 
         public async Task<UsageRecordResponse> CreateUsageRecordAsync(UsageRecordRequest request)
@@ -21,6 +24,18 @@ namespace TelecomBilling.Api.Services
             {
                 throw new ArgumentException("User not found");
             }
+
+            var month = request.Timestamp.ToString("yyyy-MM");
+            var startDate = DateTime.ParseExact($"{month}-01", "yyyy-MM-dd", null);
+            var endDate = startDate.AddMonths(1).AddDays(-1);
+
+            var existingUsage = await _context.UsageRecords
+                .Where(ur => ur.UserId == request.UserId && ur.Timestamp >= startDate && ur.Timestamp <= endDate)
+                .OrderBy(ur => ur.Timestamp)
+                .ToListAsync();
+
+            var cumulativeMinutes = existingUsage.Sum(ur => ur.CallMinutes);
+            var cumulativeDataMB = existingUsage.Sum(ur => ur.DataMB);
 
             var usageRecord = new UsageRecord
             {
@@ -34,8 +49,25 @@ namespace TelecomBilling.Api.Services
                 CreatedAt = DateTime.UtcNow
             };
 
+            var cost = await _costCalculationService.CalculateUsageRecordCostAsync(
+                usageRecord, 
+                cumulativeMinutes + request.CallMinutes, 
+                cumulativeDataMB + request.DataMB);
+
+            usageRecord.CallCost = cost.CallCost;
+            usageRecord.DataCost = cost.DataCost;
+            usageRecord.SMSCost = cost.SMSCost;
+            usageRecord.TotalCost = cost.TotalCost;
+            usageRecord.IsBundleExceeded = cost.IsBundleExceeded;
+            usageRecord.BundleExceededMinutes = cost.BundleExceededMinutes;
+            usageRecord.BundleExceededDataMB = cost.BundleExceededDataMB;
+
             _context.UsageRecords.Add(usageRecord);
             await _context.SaveChangesAsync();
+
+            await _context.Entry(usageRecord)
+                .Reference(ur => ur.User)
+                .LoadAsync();
 
             return MapToUsageRecordResponse(usageRecord);
         }
@@ -119,9 +151,9 @@ namespace TelecomBilling.Api.Services
 
         public async Task<TopConsumersResponse> GetTopConsumersAsync(string? month, int limit, string sortBy)
         {
-            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : month;
+            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : MonthFormatHelper.NormalizeMonthFormat(month) ?? month;
             
-            var startDate = DateTime.ParseExact($"{targetMonth}-01", "yyyy-MM-dd", null);
+            var startDate = MonthFormatHelper.ParseMonthToStartDate(targetMonth);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var query = _context.UsageRecords
@@ -137,7 +169,7 @@ namespace TelecomBilling.Api.Services
                     TotalCallMinutes = g.Sum(ur => ur.CallMinutes),
                     TotalDataMB = g.Sum(ur => ur.DataMB),
                     TotalSMSCount = g.Sum(ur => ur.SMSCount),
-                    TotalCost = 0 // This would need to be calculated based on tariff rules
+                    TotalCost = 0
                 });
 
             var topConsumers = sortBy.ToLower() switch
@@ -164,9 +196,9 @@ namespace TelecomBilling.Api.Services
 
         public async Task<UsageStatisticsResponse> GetUsageStatisticsAsync(string? month)
         {
-            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : month;
+            var targetMonth = string.IsNullOrEmpty(month) ? DateTime.UtcNow.ToString("yyyy-MM") : MonthFormatHelper.NormalizeMonthFormat(month) ?? month;
             
-            var startDate = DateTime.ParseExact($"{targetMonth}-01", "yyyy-MM-dd", null);
+            var startDate = MonthFormatHelper.ParseMonthToStartDate(targetMonth);
             var endDate = startDate.AddMonths(1).AddDays(-1);
 
             var usageStats = await _context.UsageRecords
@@ -218,6 +250,13 @@ namespace TelecomBilling.Api.Services
                 IsPeakTime = usageRecord.IsPeakTime,
                 IsRoaming = usageRecord.IsRoaming,
                 CreatedAt = usageRecord.CreatedAt,
+                CallCost = usageRecord.CallCost,
+                DataCost = usageRecord.DataCost,
+                SMSCost = usageRecord.SMSCost,
+                TotalCost = usageRecord.TotalCost,
+                IsBundleExceeded = usageRecord.IsBundleExceeded,
+                BundleExceededMinutes = usageRecord.BundleExceededMinutes,
+                BundleExceededDataMB = usageRecord.BundleExceededDataMB,
                 User = usageRecord.User != null ? new UserInfo
                 {
                     Id = usageRecord.User.Id,

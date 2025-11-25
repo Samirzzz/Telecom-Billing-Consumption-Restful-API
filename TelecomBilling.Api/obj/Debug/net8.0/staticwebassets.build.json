@@ -1,11 +1,1 @@
-{
-  "Version": 1,
-  "Hash": "W0UkG9BbOP4NYq0nsYAKdhPTjn6GjUe373JcNmkIsEs=",
-  "Source": "TelecomBilling.Api",
-  "BasePath": "_content/TelecomBilling.Api",
-  "Mode": "Default",
-  "ManifestType": "Build",
-  "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
-}
+{"Version":1,"Hash":"8G2jnFmlw2dIFq9stsCI9IxUgy4N1sgcqU58FxVhn2M=","Source":"TelecomBilling.Api","BasePath":"_content/TelecomBilling.Api","Mode":"Default","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}

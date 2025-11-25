@@ -52,7 +52,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IConsumptionService, ConsumptionService>();
-builder.Services.AddScoped<ITariffRuleService, TariffRuleService>();
+builder.Services.AddScoped<ICostCalculationService, CostCalculationService>();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -188,45 +188,6 @@ static async Task SeedDataAsync(TelecomBillingDbContext context)
         var samirUserFromDb = await context.Users.FirstOrDefaultAsync(u => u.Username == "samir");
         var adminUserFromDb = await context.Users.FirstOrDefaultAsync(u => u.Username == "admin");
 
-
-    // Seed sample tariff rules
-    if (!context.TariffRules.Any())
-    {
-        var tariffRules = new List<TariffRule>
-        {
-            new TariffRule
-            {
-                Name = "Premium Plan Rates",
-                PlanType = "Premium",
-                VoicePeakRate = 0.05m,
-                VoiceOffPeakRate = 0.03m,
-                DataRate = 0.01m,
-                SMSRate = 0.10m,
-                RoamingVoiceRate = 0.15m,
-                RoamingDataRate = 0.05m,
-                RoamingSMSRate = 0.25m,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new TariffRule
-            {
-                Name = "Basic Plan Rates",
-                PlanType = "Basic",
-                VoicePeakRate = 0.08m,
-                VoiceOffPeakRate = 0.05m,
-                DataRate = 0.02m,
-                SMSRate = 0.15m,
-                RoamingVoiceRate = 0.20m,
-                RoamingDataRate = 0.08m,
-                RoamingSMSRate = 0.30m,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            }
-        };
-
-        context.TariffRules.AddRange(tariffRules);
-        await context.SaveChangesAsync(); // Save tariff rules
-    }
 
         // Seed sample usage records
         if (!context.UsageRecords.Any() && samirUserFromDb != null && adminUserFromDb != null)

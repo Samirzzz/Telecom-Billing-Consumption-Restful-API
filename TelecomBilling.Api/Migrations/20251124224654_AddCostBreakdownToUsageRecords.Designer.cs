@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TelecomBilling.Api.Data;
 
@@ -11,9 +12,11 @@ using TelecomBilling.Api.Data;
 namespace TelecomBilling.Api.Migrations
 {
     [DbContext(typeof(TelecomBillingDbContext))]
-    partial class TelecomBillingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251124224654_AddCostBreakdownToUsageRecords")]
+    partial class AddCostBreakdownToUsageRecords
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

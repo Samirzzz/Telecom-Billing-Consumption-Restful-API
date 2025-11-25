@@ -23,6 +23,7 @@ namespace TelecomBilling.Api.Services
 
         public async Task<AuthResponse> LoginAsync(LoginRequest request)
         {
+            //This is an asynchronous LINQ
             var user = await _context.Users
                 .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive);
 
@@ -67,7 +68,7 @@ namespace TelecomBilling.Api.Services
         public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request)
         {
             var refreshToken = await _context.RefreshTokens
-                .Include(rt => rt.User)
+                .Include(rt => rt.User) 
                 .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken && 
                                          !rt.IsRevoked && 
                                          rt.ExpiresAt > DateTime.UtcNow);

@@ -230,3 +230,4 @@ C:\Users\HP\Desktop\Telecom-Billing-Consumption-Restful-API-1\TelecomBilling.Api
 C:\Users\HP\Desktop\Telecom-Billing-Consumption-Restful-API-1\TelecomBilling.Api.Tests\obj\Debug\net8.0\TelecomBilling.Api.Tests.genruntimeconfig.cache
 C:\Users\HP\Desktop\Telecom-Billing-Consumption-Restful-API-1\TelecomBilling.Api.Tests\obj\Debug\net8.0\ref\TelecomBilling.Api.Tests.dll
 C:\Users\HP\Desktop\Telecom-Billing-Consumption-Restful-API-1\TelecomBilling.Api.Tests\bin\Debug\net8.0\appsettings.Docker.json
+C:\Users\HP\Desktop\Telecom-Billing-Consumption-Restful-API-1\TelecomBilling.Api.Tests\bin\Debug\net8.0\TelecomBilling.Api.staticwebassets.endpoints.json
